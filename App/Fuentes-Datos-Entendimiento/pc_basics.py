@@ -6,7 +6,7 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Cargar librerías de Planetary Computer.
+# MAGIC ## Cargar librerías de Planetary Computer
 # MAGIC Para acceder a la interfaz de la iniciativa de Microsoft Planetary Computer, es necesario cargar la librería correspondiente en Python. Antes de cargarla, es importante instalarla. La instalación en databricks se puede realizar de manera temporal mediante
 # MAGIC ```
 # MAGIC %%bash
@@ -21,6 +21,7 @@ from pystac_client import Client
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC ## Información disponible de un sensor o base de datos
 # MAGIC Para listar las bases de datos disponibles en Planetary Computer, podemos usar los comandos
 
 # COMMAND ----------
