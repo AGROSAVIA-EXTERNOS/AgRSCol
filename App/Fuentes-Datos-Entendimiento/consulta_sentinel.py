@@ -69,7 +69,3 @@ search = catalog.search(
 # Check how many items were returned
 items = list(search.get_items())
 print(f"Returned {len(items)} Items")
-
-# COMMAND ----------
-
-

@@ -18,6 +18,7 @@ import planetary_computer as pc
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC ## Definición de zona de consulta
 # MAGIC Definimos la zona a buscar dentro del catalogo de lansat. En este caso consultaremos la zona de nuestro centro de investigación principal, Tibaitatá, en Mosquera Cundinamarca.
 
 # COMMAND ----------
@@ -69,3 +70,95 @@ search = catalog.search(
 # Check how many items were returned
 items = list(search.get_items())
 print(f"Returned {len(items)} Items")
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Seleccionar y visualizar una imagen de la lista
+# MAGIC Seleccionaremos la imágen satelital con el mínimo de nubosidad. Esto se logra primero ordenando por porcentaje de nubosidad las imágenes disponibles y luego eligiendo el primer elemento.
+
+# COMMAND ----------
+
+selected_item = sorted(items, key=lambda item: eo.ext(item).cloud_cover)[0]
+
+print(
+    f"Choosing {selected_item.id} from {selected_item.datetime.date()}"
+    + f" with {selected_item.properties['eo:cloud_cover']}% cloud cover"
+)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC para este caso, tenemos un imágen con un mínimo de 5.13 por ciento de nubosidad.
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Visualización de imágen seleccionada
+# MAGIC Para ver la imágen seleccionada, debemos usar la información disponible en el espectro visible (rojo, verde y azul). Para ello definimos una función que nos permita buscar la información asociada a este espectro.
+
+# COMMAND ----------
+
+def find_asset_by_band_common_name(item, common_name):
+    for asset in item.assets.values():
+        asset_bands = eo.ext(asset).bands
+        if asset_bands and asset_bands[0].common_name == common_name:
+            return asset
+    raise KeyError(f"{common_name} band not found")
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC Usamos esta función para obtener cada una de las bandas del espctro visible.
+
+# COMMAND ----------
+
+asset_hrefs = [
+    find_asset_by_band_common_name(selected_item, "red").href,
+    find_asset_by_band_common_name(selected_item, "green").href,
+    find_asset_by_band_common_name(selected_item, "blue").href,
+]
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC y creamos las direcciones de dichas imagenes usando nuestro login de planetary computer.
+
+# COMMAND ----------
+
+signed_hrefs = [pc.sign(asset_href) for asset_href in asset_hrefs]
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC Para visualizar la imágen usamos la librería rasterio.
+
+# COMMAND ----------
+
+import rasterio
+from rasterio import windows
+from rasterio import features
+from rasterio import warp
+
+import numpy as np
+from PIL import Image
+
+
+def read_band(href):
+    with rasterio.open(href) as ds:
+        aoi_bounds = features.bounds(area_of_interest)
+        warped_aoi_bounds = warp.transform_bounds("epsg:4326", ds.crs, *aoi_bounds)
+        aoi_window = windows.from_bounds(transform=ds.transform, *warped_aoi_bounds)
+        return ds.read(1, window=aoi_window)
+
+
+bands = [read_band(href) for href in signed_hrefs]
+multiband_data = np.stack(bands)
+rescaled = multiband_data.astype(float)
+min_value, max_value = rescaled.min(), rescaled.max()
+rescaled = ((rescaled - min_value) * 255) / (max_value - min_value)
+byte_data = rescaled.astype("ubyte")
+img=Image.fromarray(np.transpose(byte_data, axes=[1, 2, 0]))
+
+import matplotlib.pyplot as plt
+plt.imshow(img)
