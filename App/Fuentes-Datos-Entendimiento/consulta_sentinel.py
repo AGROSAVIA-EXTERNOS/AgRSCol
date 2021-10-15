@@ -1,7 +1,7 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # Consulta catalogo Lansat
-# MAGIC Planetary Computer tiene la capacidad de buscar una determinada región dentro de las imágenes satelitales disponibles y retornar dicha región recortada. El siguiente ejemplo fue adaptado del <a href=https://planetarycomputer.microsoft.com/dataset/landsat-8-c2-l2#Example-Notebook>ejemplo </a> disponible en la página de la herramienta. Aquí obtendremos la lista de de imágenes que contienen nuestra región de consulta en un intervalo de fechas determinadas.
+# MAGIC # Consulta catalogo Sentinel
+# MAGIC Planetary Computer tiene la capacidad de buscar una determinada región dentro de las imágenes satelitales disponibles y retornar dicha región recortada. El siguiente ejemplo fue adaptado del <a href=https://planetarycomputer.microsoft.com/dataset/sentinel-2-l2a#Example-Notebook>ejemplo </a> disponible en la página de la herramienta. Aquí obtendremos la lista de de imágenes que contienen nuestra región de consulta en un intervalo de fechas determinadas.
 
 # COMMAND ----------
 
@@ -18,7 +18,7 @@ import planetary_computer as pc
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Definimos la zona a buscar dentro del catalogo de lansat. En este caso consultaremos la zona de nuestro centro de investigación principal, Tibaitatá, en Mosquera Cundinamarca.
+# MAGIC Definimos la zona a buscar dentro del catalogo de sentinel. En este caso consultaremos la zona de nuestro centro de investigación principal, Tibaitatá, en Mosquera Cundinamarca.
 
 # COMMAND ----------
 
@@ -60,7 +60,7 @@ time_of_interest = "1990-01-01/2021-12-31"
 catalog = Client.open("https://planetarycomputer.microsoft.com/api/stac/v1")
 
 search = catalog.search(
-    collections=["landsat-8-c2-l2"],
+    collections=["sentinel-2-l2a"],
     intersects=area_of_interest,
     datetime=time_of_interest,
     query={"eo:cloud_cover": {"lt": 100}},
@@ -69,3 +69,7 @@ search = catalog.search(
 # Check how many items were returned
 items = list(search.get_items())
 print(f"Returned {len(items)} Items")
+
+# COMMAND ----------
+
+
